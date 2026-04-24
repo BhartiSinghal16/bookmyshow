@@ -1,0 +1,210 @@
+{% extends "users/basic.html" %} {% block content %}
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-9 mx-auto">
+
+      <!-- Movie & Theater Info -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+              <h4 class="card-title mb-1">{{ theaters.movie.name }}</h4>
+              <p class="card-text text-muted mb-0">
+                {{ theaters.name }} &nbsp;|&nbsp; {{ theaters.time }}
+              </p>
+            </div>
+            <div class="mt-2 mt-sm-0">
+              <button class="btn {% if theaters.screen_type == '2D' %}btn-primary{% else %}btn-outline-primary{% endif %} me-1">
+                2D
+              </button>
+              <button class="btn {% if theaters.screen_type == '3D' %}btn-primary{% else %}btn-outline-primary{% endif %} me-1">
+                3D
+              </button>
+              <button class="btn {% if theaters.screen_type == 'IMAX' %}btn-primary{% else %}btn-outline-primary{% endif %} me-1">
+                IMAX 3D
+              </button>
+              <button class="btn btn-outline-secondary">
+                {{ seats|length }} Seats
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+      <!-- Seat Map -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title text-center mb-3">Select Your Seats</h5>
+          <div class="screen">🎬 All eyes this way please!</div>
+
+          <form method="POST" id="seat-form">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center flex-wrap mb-4" id="seat-grid">
+              {% for seat in seats %}
+                {% if seat.is_booked %}
+                  <div class="seat-box sold" title="Already Booked">
+                    {{ seat.seat_number }}
+                  </div>
+                {% elif seat.is_locked and seat.locked_by != request.user %}
+                  <div class="seat-box locked"
+                       title="Held by another user ({{ seat.seconds_until_unlock }}s left)">
+                    🔒{{ seat.seat_number }}
+                  </div>
+                {% else %}
+                  <div class="seat-box available"
+                       data-seat-id="{{ seat.id }}"
+                       onclick="toggleSeat(this, '{{ seat.id }}')"
+                       title="Click to select">
+                    <input type="checkbox" name="seats" value="{{ seat.id }}"
+                           id="seat-{{ seat.id }}" class="d-none seat-checkbox">
+                    {{ seat.seat_number }}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            <!-- Legend -->
+            <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+              <span><span class="legend-dot available-dot"></span> Available</span>
+              <span><span class="legend-dot selected-dot"></span> Selected</span>
+              <span><span class="legend-dot locked-dot"></span> Held by someone</span>
+              <span><span class="legend-dot sold-dot"></span> Booked</span>
+            </div>
+
+            <p id="selection-info" class="text-center text-muted">No seats selected.</p>
+            <div class="text-center">
+              <button type="submit" id="submit-btn"
+                      class="btn btn-success btn-lg" disabled>
+                🔒 Lock Seats & Proceed
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mt-3 border-info">
+        <div class="card-body py-2">
+          <small class="text-muted">
+            <strong>ℹ️ How locking works:</strong>
+            Selected seats are locked for <strong>{{ lock_duration }} minutes</strong>
+            at the database level. No one else can book them during this time.
+            Locks auto-release if you don't complete booking in time.
+          </small>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  var STATUS_URL  = "{% url 'seat_status' theaters.id %}";
+  var RELEASE_URL = "{% url 'release_locks' %}";
+  var CSRF_TOKEN  = "{{ csrf_token }}";
+  var selectedSeats = new Set();
+
+  function toggleSeat(el, seatId) {
+    if (el.classList.contains('sold') || el.classList.contains('locked')) return;
+    var cb = document.getElementById('seat-' + seatId);
+    if (selectedSeats.has(seatId)) {
+      selectedSeats.delete(seatId);
+      el.classList.remove('selected');
+      cb.checked = false;
+    } else {
+      selectedSeats.add(seatId);
+      el.classList.add('selected');
+      cb.checked = true;
+    }
+    updateSummary();
+  }
+
+  function updateSummary() {
+    var n    = selectedSeats.size;
+    var btn  = document.getElementById('submit-btn');
+    var info = document.getElementById('selection-info');
+    if (n === 0) {
+      info.textContent = 'No seats selected.';
+      btn.disabled = true;
+    } else {
+      info.textContent = n + ' seat(s) selected. Seats will be locked for {{ lock_duration }} minutes.';
+      btn.disabled = false;
+    }
+  }
+
+  // Poll seat status every 10 seconds for real-time updates
+  function pollSeatStatus() {
+    fetch(STATUS_URL)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        data.seats.forEach(function(s) {
+          var el = document.querySelector('[data-seat-id="' + s.id + '"]');
+          if (!el) return;
+          if (s.status === 'booked') {
+            el.className   = 'seat-box sold';
+            el.onclick     = null;
+            el.textContent = s.seat_number;
+            selectedSeats.delete(String(s.id));
+          } else if (s.status === 'locked') {
+            el.className   = 'seat-box locked';
+            el.onclick     = null;
+            el.textContent = '🔒' + s.seat_number;
+            selectedSeats.delete(String(s.id));
+          } else {
+            if (!el.classList.contains('selected')) {
+              el.className = 'seat-box available';
+            }
+          }
+        });
+        updateSummary();
+      });
+  }
+  setInterval(pollSeatStatus, 10000);
+
+  // Release locks if user closes tab or navigates away
+  window.addEventListener('beforeunload', function() {
+    navigator.sendBeacon(RELEASE_URL,
+      new URLSearchParams({ csrfmiddlewaretoken: CSRF_TOKEN })
+    );
+  });
+</script>
+
+<style>
+  .screen {
+    margin: 0 auto 24px;
+    background: linear-gradient(to bottom, #ccc, #eee);
+    max-width: 500px;
+    height: 44px;
+    text-align: center;
+    line-height: 44px;
+    border-radius: 4px;
+    color: #555;
+  }
+  .seat-box {
+    width: 44px; height: 44px;
+    margin: 4px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.2s;
+    user-select: none;
+  }
+  .seat-box.available { background:#d4edda; border:2px solid #28a745; color:#155724; }
+  .seat-box.available:hover { background:#28a745; color:#fff; transform:scale(1.1); }
+  .seat-box.selected  { background:#28a745; color:#fff; border:2px solid #155724; }
+  .seat-box.locked    { background:#fff3cd; border:2px solid #ffc107; color:#856404; cursor:not-allowed; font-size:0.65rem; }
+  .seat-box.sold      { background:#e2e3e5; border:2px solid #adb5bd; color:#6c757d; cursor:not-allowed; }
+  .legend-dot { display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:4px; vertical-align:middle; }
+  .available-dot { background:#d4edda; border:2px solid #28a745; }
+  .selected-dot  { background:#28a745; border:2px solid #155724; }
+  .locked-dot    { background:#fff3cd; border:2px solid #ffc107; }
+  .sold-dot      { background:#e2e3e5; border:2px solid #adb5bd; }
+</style>
+{% endblock %}

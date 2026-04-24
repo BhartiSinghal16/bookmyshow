@@ -1,0 +1,15 @@
+{% extends "users/basic.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width:500px;">
+  <div class="card border-warning shadow text-center">
+    <div class="card-body py-5">
+      <div style="font-size:4rem;">⏰</div>
+      <h3 class="text-warning mt-3">Reservation Expired</h3>
+      <p class="text-muted">Your 2-minute seat lock expired. Please select seats again.</p>
+      <a href="{% url 'movie_list' %}" class="btn btn-primary btn-lg mt-2">
+        Back to Movies
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

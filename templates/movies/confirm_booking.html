@@ -1,0 +1,51 @@
+{% extends "users/basic.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width:600px;">
+  <div class="card shadow">
+    <div class="card-header bg-success text-white">
+      <h4 class="mb-0">🔒 Seats Locked — Confirm Booking</h4>
+    </div>
+    <div class="card-body">
+      <p><strong>Movie:</strong> {{ theater.movie.name }}</p>
+      <p><strong>Theater:</strong> {{ theater.name }}</p>
+      <p><strong>Show Time:</strong> {{ theater.time }}</p>
+      <p><strong>Seats:</strong>
+        {% for seat in seats %}{{ seat.seat_number }}{% if not forloop.last %}, {% endif %}{% endfor %}
+      </p>
+
+      <div class="alert alert-warning text-center">
+        ⏱ Seats locked for: <strong id="countdown"></strong>
+        <br><small>Complete booking before time expires or seats will be released.</small>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success btn-lg w-100">
+            ✅ Confirm Booking
+          </button>
+          <a href="{% url 'movie_list' %}" class="btn btn-outline-danger btn-lg w-100">
+            ❌ Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  var secondsLeft = {{ seconds_left }};
+  var timer = setInterval(function() {
+    secondsLeft--;
+    var m = Math.floor(secondsLeft / 60);
+    var s = secondsLeft % 60;
+    document.getElementById('countdown').textContent =
+      m + ':' + (s < 10 ? '0' : '') + s;
+    if (secondsLeft <= 0) {
+      clearInterval(timer);
+      alert('Your seat reservation has expired! Please select seats again.');
+      window.location.href = "{% url 'movie_list' %}";
+    }
+  }, 1000);
+</script>
+{% endblock %}

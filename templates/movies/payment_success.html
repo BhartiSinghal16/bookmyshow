@@ -1,0 +1,20 @@
+{% extends "users/basic.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width:500px;">
+  <div class="card border-success shadow text-center">
+    <div class="card-body py-5">
+      <div style="font-size:4rem;">✅</div>
+      <h3 class="text-success mt-3">Booking Confirmed!</h3>
+      <p class="text-muted">Payment verified and booking completed successfully.</p>
+      <table class="table table-bordered mt-3">
+        <tr><th>Order ID</th><td><code>{{ order_id }}</code></td></tr>
+        <tr><th>Payment ID</th><td><code>{{ payment_id }}</code></td></tr>
+        <tr><th>Status</th><td><span class="badge badge-success">PAID</span></td></tr>
+      </table>
+      <a href="{% url 'profile' %}" class="btn btn-success btn-lg mt-2">
+        View My Bookings
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

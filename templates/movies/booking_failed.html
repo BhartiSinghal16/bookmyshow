@@ -1,0 +1,18 @@
+{% extends "users/basic.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width:500px;">
+  <div class="card border-danger shadow text-center">
+    <div class="card-body py-5">
+      <div style="font-size:4rem;">❌</div>
+      <h3 class="text-danger mt-3">Booking Failed</h3>
+      <p class="text-muted">
+        The following seats could not be booked:
+        <strong>{{ failed|join:", " }}</strong>
+      </p>
+      <a href="{% url 'movie_list' %}" class="btn btn-primary btn-lg mt-2">
+        Try Again
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

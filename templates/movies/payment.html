@@ -1,0 +1,108 @@
+{% extends "users/basic.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width:650px;">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">💳 Complete Your Payment</h4>
+    </div>
+    <div class="card-body">
+
+      <table class="table table-bordered mb-3">
+        <tr><th>Movie</th><td>{{ theater.movie.name }}</td></tr>
+        <tr><th>Theater</th><td>{{ theater.name }}</td></tr>
+        <tr><th>Show Time</th><td>{{ theater.time }}</td></tr>
+        <tr>
+          <th>Seats</th>
+          <td>
+            {% for seat in seats %}
+              <span class="badge badge-success">{{ seat.seat_number }}</span>
+            {% endfor %}
+          </td>
+        </tr>
+        <tr><th>Total</th><td><strong>₹{{ amount_display }}</strong></td></tr>
+        <tr><th>Order ID</th><td><code>{{ razorpay_order_id }}</code></td></tr>
+      </table>
+
+      <!-- Countdown Timer -->
+      <div class="alert alert-warning text-center" id="timer-box">
+        ⏱ Seats locked for: <strong id="countdown"></strong>
+        <br><small>Complete payment before time expires.</small>
+      </div>
+      <div class="alert alert-danger d-none text-center" id="expired-box">
+        ❌ Seat reservation expired.
+        <a href="{% url 'movie_list' %}">Start again</a>
+      </div>
+
+      <!-- Pay Button -->
+      <button id="pay-btn" class="btn btn-success btn-lg btn-block mt-3">
+        💳 Pay ₹{{ amount_display }} with Razorpay
+      </button>
+
+      <!-- Hidden form submitted after payment success -->
+      <form id="payment-form" method="POST" action="{% url 'confirm_payment' %}">
+        {% csrf_token %}
+        <input type="hidden" name="razorpay_order_id"   id="rz_order_id">
+        <input type="hidden" name="razorpay_payment_id" id="rz_payment_id">
+        <input type="hidden" name="razorpay_signature"  id="rz_signature">
+      </form>
+
+      <div class="mt-4 p-3 bg-light rounded">
+        <small class="text-muted">
+          <strong>🔒 Security:</strong><br>
+          ✅ Payment verified server-side using HMAC-SHA256<br>
+          ✅ Unique Order ID prevents duplicate transactions<br>
+          ✅ Webhook validates all payment events<br>
+          ✅ Atomic DB transactions prevent double booking
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  // Countdown timer
+  var secondsLeft = {{ seconds_left }};
+  var timer = setInterval(function() {
+    secondsLeft--;
+    var m = Math.floor(secondsLeft / 60);
+    var s = secondsLeft % 60;
+    document.getElementById('countdown').textContent =
+      m + ':' + (s < 10 ? '0' : '') + s;
+    if (secondsLeft <= 0) {
+      clearInterval(timer);
+      document.getElementById('pay-btn').disabled = true;
+      document.getElementById('timer-box').classList.add('d-none');
+      document.getElementById('expired-box').classList.remove('d-none');
+    }
+  }, 1000);
+
+  // Razorpay payment popup
+  document.getElementById('pay-btn').addEventListener('click', function() {
+    var options = {
+      key:         '{{ razorpay_key }}',
+      amount:      {{ amount }},
+      currency:    'INR',
+      order_id:    '{{ razorpay_order_id }}',
+      name:        'BookMySeat',
+      description: 'Movie Ticket Booking',
+      prefill: { email: '{{ user_email }}' },
+      theme:   { color: '#007bff' },
+      handler: function(response) {
+        // Send all 3 tokens to server for HMAC verification
+        document.getElementById('rz_order_id').value   = response.razorpay_order_id;
+        document.getElementById('rz_payment_id').value = response.razorpay_payment_id;
+        document.getElementById('rz_signature').value  = response.razorpay_signature;
+        document.getElementById('payment-form').submit();
+      },
+      modal: {
+        ondismiss: function() {
+          alert('Payment cancelled. Your seats are still locked.');
+        }
+      }
+    };
+    var rzp = new Razorpay(options);
+    rzp.open();
+  });
+</script>
+{% endblock %}

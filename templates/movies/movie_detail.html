@@ -1,0 +1,158 @@
+{% extends "users/basic.html" %} {% block content %}
+<div class="container py-5">
+  <!-- Movie Info -->
+  <div class="row mb-5">
+    <div class="col-md-4">
+      <img
+        src="{{ movie.image.url }}"
+        class="img-fluid rounded shadow"
+        alt="{{ movie.name }}"
+        style="width: 100%; max-height: 420px; object-fit: cover"
+      />
+    </div>
+
+    <div class="col-md-8 d-flex flex-column justify-content-center">
+      <h2 class="mb-2">{{ movie.name }}</h2>
+      <p class="mb-1">
+        <i class="fas fa-star text-warning"></i>
+        <strong>{{ movie.rating }}</strong> / 10
+      </p>
+      <p class="mb-1 text-muted">
+        <i class="fas fa-users"></i>
+        <strong>Cast:</strong> {{ movie.cast }}
+      </p>
+      {% if movie.description %}
+      <p class="mt-3">{{ movie.description }}</p>
+      {% endif %}
+
+      <div class="mt-4">
+        <a href="{% url 'theater_list' movie.id %}" class="btn btn-primary btn-lg">
+          🎟 Book Tickets
+        </a>
+        <a href="{% url 'movie_list' %}" class="btn btn-outline-secondary btn-lg ml-2">
+          ← Back
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trailer Section -->
+  <div class="mb-2">
+    <h4><i class="fas fa-film text-danger"></i> Official Trailer</h4>
+    <small class="text-muted">
+      Video loads only when you click — saves bandwidth on slow networks.
+    </small>
+  </div>
+
+  {% if safe_trailer %}
+    {% with video_id=safe_trailer|slice:"38:" %}
+    <div id="trailer-wrapper" style="max-width: 760px">
+
+      <!-- Thumbnail placeholder — no YouTube JS loads until click -->
+      <div
+        id="trailer-placeholder"
+        onclick="loadTrailer()"
+        style="position:relative; cursor:pointer; background:#000;
+               border-radius:10px; overflow:hidden;">
+
+        <img
+          src="https://img.youtube.com/vi/{{ video_id }}/hqdefault.jpg"
+          loading="lazy"
+          alt="{{ movie.name }} trailer thumbnail"
+          style="width:100%; display:block; opacity:0.75;
+                 max-height:427px; object-fit:cover;"
+        />
+
+        <!-- Red play button -->
+        <div style="position:absolute; top:50%; left:50%;
+                    transform:translate(-50%,-50%);
+                    background:rgba(255,0,0,0.85);
+                    border-radius:50%; width:80px; height:80px;
+                    display:flex; align-items:center; justify-content:center;">
+          <span style="font-size:2.2rem; color:#fff; margin-left:6px;">▶</span>
+        </div>
+
+        <div style="position:absolute; bottom:12px; left:0; right:0;
+                    text-align:center; color:#fff; font-size:0.9rem;
+                    text-shadow:0 1px 3px #000;">
+          Click to load trailer — streams only on demand
+        </div>
+      </div>
+
+      <!--
+        iframe has NO src on page load = zero network request = fast page.
+        src is set only when user clicks play.
+        sandbox blocks popups, navigation hijacking = XSS safe.
+      -->
+      <iframe
+        id="yt-iframe"
+        style="display:none; width:100%; height:427px;
+               border:0; border-radius:10px;"
+        title="{{ movie.name }} Official Trailer"
+        allow="accelerometer; autoplay; clipboard-write;
+               encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        referrerpolicy="strict-origin-when-cross-origin"
+        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups">
+      </iframe>
+
+      <!-- Fallback shown after clicking play -->
+      <div id="embed-fallback" style="display:none; margin-top:12px;">
+        <div class="alert alert-warning d-flex align-items-center">
+          <span style="font-size:1.5rem; margin-right:10px;">⚠️</span>
+          <div>
+            <strong>Video cannot be embedded</strong> — YouTube has
+            restricted this video from playing on external sites.
+            <br>
+            <a href="https://www.youtube.com/watch?v={{ video_id }}"
+               target="_blank"
+               class="btn btn-danger btn-sm mt-2">
+              ▶ Watch on YouTube
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      function loadTrailer() {
+        var safeUrl  = "{{ safe_trailer|escapejs }}?autoplay=1&rel=0&modestbranding=1";
+        var iframe   = document.getElementById('yt-iframe');
+        var ph       = document.getElementById('trailer-placeholder');
+        var fallback = document.getElementById('embed-fallback');
+
+        iframe.setAttribute('src', safeUrl);
+        iframe.style.display = 'block';
+        ph.style.display     = 'none';
+        fallback.style.display = 'block';
+      }
+    </script>
+
+    {% endwith %}
+
+  {% else %}
+
+    <!-- Fallback: no trailer or URL failed server-side validation -->
+    <div class="card border-secondary" style="max-width:760px;">
+      <div class="card-body text-center py-5"
+           style="background:#f8f9fa; border-radius:10px;">
+        <div style="font-size:3.5rem;">🎬</div>
+        <h5 class="mt-3 text-muted">Trailer Not Available</h5>
+        <p class="text-muted mb-1">
+          The trailer for <strong>{{ movie.name }}</strong> hasn't been
+          added yet, or the video was removed by the publisher.
+        </p>
+        <small class="text-muted">
+          Check back later or search on YouTube directly.
+        </small>
+      </div>
+    </div>
+
+  {% endif %}
+
+</div>
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{% endblock %}
