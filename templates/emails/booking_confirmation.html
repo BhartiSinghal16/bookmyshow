@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmation</title>
+  <style>
+    body { margin:0; padding:0; background:#f4f4f4; font-family:'Segoe UI',Arial,sans-serif; }
+    .wrapper { max-width:600px; margin:30px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+    .header { background:linear-gradient(135deg,#e63946,#c1121f); padding:30px 40px; text-align:center; }
+    .header h1 { color:#fff; margin:0; font-size:1.6rem; }
+    .header p { color:rgba(255,255,255,0.85); margin:6px 0 0; font-size:0.95rem; }
+    .body { padding:30px 40px; }
+    .success-badge { background:#e8f5e9; border:1px solid #a5d6a7; border-radius:8px; padding:14px 20px; text-align:center; margin-bottom:24px; }
+    .success-badge span { font-size:2rem; }
+    .success-badge p { margin:6px 0 0; color:#2e7d32; font-weight:600; }
+    .section-title { font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#999; margin:20px 0 8px; font-weight:600; }
+    .info-table { width:100%; border-collapse:collapse; }
+    .info-table tr { border-bottom:1px solid #f0f0f0; }
+    .info-table tr:last-child { border-bottom:none; }
+    .info-table td { padding:10px 0; font-size:0.92rem; }
+    .info-table td:first-child { color:#666; width:40%; }
+    .info-table td:last-child { color:#222; font-weight:600; }
+    .seat-badge { display:inline-block; background:#e63946; color:#fff; border-radius:6px; padding:4px 12px; font-weight:700; font-size:0.9rem; margin:2px; }
+    .divider { border:none; border-top:1px solid #f0f0f0; margin:24px 0; }
+    .payment-box { background:#f8f9fa; border-radius:8px; padding:16px 20px; }
+    .payment-box .label { font-size:0.78rem; color:#999; text-transform:uppercase; letter-spacing:1px; }
+    .payment-box .value { font-size:1rem; color:#222; font-weight:700; font-family:monospace; word-break:break-all; }
+    .amount-box { background:linear-gradient(135deg,#e63946,#c1121f); border-radius:8px; padding:16px 20px; color:#fff; text-align:center; margin-top:16px; }
+    .amount-box .amt { font-size:2rem; font-weight:700; }
+    .footer { background:#f8f9fa; padding:20px 40px; text-align:center; border-top:1px solid #eee; }
+    .footer p { color:#999; font-size:0.8rem; margin:4px 0; }
+    .warning { background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:12px 16px; margin-top:20px; font-size:0.85rem; color:#795548; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <h1>🎬 BookMySeat</h1>
+    <p>Your ticket is confirmed!</p>
+  </div>
+
+  <div class="body">
+
+    <div class="success-badge">
+      <span>✅</span>
+      <p>Booking Confirmed — Enjoy the show, {{ username }}!</p>
+    </div>
+
+    <div class="section-title">🎥 Movie Details</div>
+    <table class="info-table">
+      <tr><td>Movie</td><td>{{ movie_name }}</td></tr>
+      <tr><td>Theater</td><td>{{ theater_name }}</td></tr>
+      <tr><td>Show Time</td><td>{{ show_time }}</td></tr>
+      <tr><td>Screen Type</td><td>{{ screen_type }}</td></tr>
+    </table>
+
+    <hr class="divider">
+
+    <div class="section-title">💺 Your Seats</div>
+    <div>
+      {% for seat in seat_numbers %}
+      <span class="seat-badge">{{ seat }}</span>
+      {% endfor %}
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-title">📋 Booking Information</div>
+    <table class="info-table">
+      <tr><td>Booking ID</td><td>#{{ booking_id }}</td></tr>
+      <tr><td>Booked On</td><td>{{ booked_at }}</td></tr>
+      <tr><td>Booked By</td><td>{{ username }}</td></tr>
+    </table>
+
+    <div class="section-title">💳 Payment Details</div>
+    <div class="payment-box">
+      <div class="label">Payment ID</div>
+      <div class="value">{{ payment_id }}</div>
+    </div>
+
+    <div class="amount-box">
+      <div style="font-size:0.85rem; opacity:0.8;">Total Amount Paid</div>
+      <div class="amt">₹{{ total_amount }}</div>
+      <div style="font-size:0.8rem; opacity:0.7; margin-top:4px;">
+        {{ seat_count }} seat(s) × ₹{{ price_per_seat }}
+      </div>
+    </div>
+
+    <div class="warning">
+      ⚠️ <strong>Security Notice:</strong> This is an automated confirmation.
+      BookMySeat will never ask for your password or payment details via email.
+      If you did not make this booking please contact support immediately.
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p>🎬 <strong>BookMySeat</strong> — Your Movie Booking Partner</p>
+    <p>This is an automated email. Please do not reply.</p>
+    <p>© 2026 BookMySeat. All rights reserved.</p>
+  </div>
+
+</div>
+</body>
+</html>

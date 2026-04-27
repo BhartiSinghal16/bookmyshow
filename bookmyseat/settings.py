@@ -87,3 +87,43 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 RAZORPAY_KEY_ID         = 'rzp_test_ShTYSpdDMfzgI9'
 RAZORPAY_KEY_SECRET     = 'gLSgaxaORQ0t7nyTG5hnOsYo'
 RAZORPAY_WEBHOOK_SECRET = 'YOUR_WEBHOOK_SECRET'
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "bookmyseat-analytics-cache",
+    }
+}
+
+EMAIL_BACKEND      = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'BookMySeat <noreply@bookmyseat.com>'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name} — {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'email_file': {
+            'class': 'logging.FileHandler',
+            'filename': 'email_logs.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'bookmyseat.email': {
+            'handlers': ['console', 'email_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}

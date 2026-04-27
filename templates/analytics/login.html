@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login — BookMySeat</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background:#0f172a; color:#e2e8f0; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .login-card { background:#1e293b; border-radius:16px; padding:40px; width:100%; max-width:420px; border-top:4px solid #e63946; }
+    .form-control { background:#0f172a; border:1px solid #334155; color:#e2e8f0; }
+    .form-control:focus { background:#0f172a; border-color:#e63946; color:#e2e8f0; box-shadow:0 0 0 0.2rem rgba(230,57,70,.25); }
+    .btn-login { background:#e63946; border:none; width:100%; padding:12px; font-weight:600; }
+    .btn-login:hover { background:#c1121f; }
+    label { color:#94a3b8; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="text-center mb-4">
+      <div style="font-size:3rem;">🎬</div>
+      <h4 class="mt-2">BookMySeat</h4>
+      <p class="text-muted" style="font-size:0.85rem;">Admin Analytics Dashboard</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger py-2">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" class="form-control" placeholder="Admin username" autofocus required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" class="form-control" placeholder="Admin password" required>
+      </div>
+      <button type="submit" class="btn btn-login text-white mt-2">
+        🔒 Login to Dashboard
+      </button>
+    </form>
+
+    <div class="mt-4 p-3 rounded" style="background:#0f172a;">
+      <small class="text-muted">
+        🔐 Only staff users can access this dashboard.
+        Passwords stored using PBKDF2+SHA256 hashing.
+      </small>
+    </div>
+  </div>
+</body>
+</html>
