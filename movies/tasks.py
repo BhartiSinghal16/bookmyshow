@@ -2,9 +2,11 @@ from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from django.utils import timezone
 
+LOCK_DURATION_MINUTES = 2
+
 
 def release_expired_locks():
-    from movies.models import Seat, LOCK_DURATION_MINUTES
+    from movies.models import Seat
     cutoff   = timezone.now() - timedelta(minutes=LOCK_DURATION_MINUTES)
     released = Seat.objects.filter(
         locked_at__lt=cutoff,

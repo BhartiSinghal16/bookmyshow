@@ -8,7 +8,7 @@ SECRET_KEY = 'django-insecure-c8aetlj(=vp90n@#yoc^&d(_6ivp(d!bv-4-f!r$lawptjzrwu
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -23,7 +23,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -33,13 +33,10 @@ MIDDLEWARE = [
 ]
 
 AUTH_USER_MODEL = 'auth.User'
-EMAIL_BACKEND   = 'django.core.mail.backends.console.EmailBackend'
-
-MEDIA_URL  = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-ROOT_URLCONF = 'bookmyseat.urls'
-LOGIN_URL    = '/login/'
+MEDIA_URL       = '/media/'
+MEDIA_ROOT      = os.path.join(BASE_DIR, 'media')
+ROOT_URLCONF    = 'bookmyseat.urls'
+LOGIN_URL       = '/login/'
 
 TEMPLATES = [
     {
@@ -59,12 +56,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'bookmyseat.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# ── Database ───────────────────────────────────────────────────
+# SQLite locally, Neon PostgreSQL on Vercel
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.parse(
+            os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -78,17 +86,18 @@ TIME_ZONE     = 'UTC'
 USE_I18N      = True
 USE_TZ        = True
 
-STATIC_URL = 'static/'
+STATIC_URL          = 'static/'
+STATIC_ROOT         = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ─────────────────────────────────────────────────────────────
-# Razorpay Payment Gateway
-# ─────────────────────────────────────────────────────────────
+# ── Razorpay ───────────────────────────────────────────────────
 RAZORPAY_KEY_ID         = 'rzp_test_ShTYSpdDMfzgI9'
 RAZORPAY_KEY_SECRET     = 'gLSgaxaORQ0t7nyTG5hnOsYo'
 RAZORPAY_WEBHOOK_SECRET = 'YOUR_WEBHOOK_SECRET'
 
+# ── Cache ──────────────────────────────────────────────────────
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -96,10 +105,11 @@ CACHES = {
     }
 }
 
+# ── Email ──────────────────────────────────────────────────────
 EMAIL_BACKEND      = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'BookMySeat <noreply@bookmyseat.com>'
 
-
+# ── Logging ────────────────────────────────────────────────────
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -128,6 +138,3 @@ LOGGING = {
         },
     },
 }
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']
