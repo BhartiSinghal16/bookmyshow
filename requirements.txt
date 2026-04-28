@@ -1,3 +1,4 @@
+setuptools
 asgiref==3.7.2
 dj-database-url
 Django==3.2.19
